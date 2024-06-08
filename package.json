@@ -1,0 +1,15 @@
+{
+  "name": "bun-parser",
+  "version": "0.0.1",
+  "author": {
+    "name": "Léo Durillon"
+  },
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
