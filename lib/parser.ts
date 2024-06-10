@@ -6,15 +6,15 @@ import ParserError from "./parserError";
  * @template T - The schema type extending BaseSchema.
  */
 export default class Parser<T extends BaseSchema> {
-  private name: string;
+  private name?: string;
   private description?: string;
   private args: string[];
-  private place: string;
+  public place: string;
   private separator: string;
   private schema: ParserElement[];
   private help?: { name: string; short: string };
   private path: boolean;
-
+  public value: string | { path: string; values: ParsedValue<T> };
   /**
    * Creates an instance of Parser.
    * @param props - The properties for initializing the parser.
@@ -25,37 +25,43 @@ export default class Parser<T extends BaseSchema> {
    * @param props.help - The help options for the program.
    * @param props.separator - The separator for argument values.
    */
-  constructor(props: {
-    name?: string;
-    description?: string;
-    schema: T;
-    path?: boolean;
-    help?: { name: string; short: string };
-    separator?: string;
-  }) {
-    this.name = props.name ?? "Program";
-    this.description = props.description;
+  constructor({
+    name,
+    description,
+    help,
+    path,
+    separator,
+    schema,
+  }: ParserConstructor<T>) {
+    this.name = name;
+    this.description = description;
     this.args = Bun.argv.slice(
-      props.path && ![props.help?.name, props.help?.short].includes(Bun.argv[2])
-        ? 3
-        : 2
+      path && ![help?.name, help?.short].includes(Bun.argv[2]) ? 3 : 2
     );
-    this.place = `${Bun.argv[1]}${props.path ? "/" + Bun.argv[2] : ""}`;
-    this.separator = props.separator ?? "=";
-    this.schema = Object.keys(props.schema).map(
-      (e) => new ParserElement({ name: "--" + e, ...props.schema[e] })
+    this.place = `${process.cwd()}${path ? "/" + Bun.argv[2] : ""}`;
+    this.separator = separator ?? "=";
+    this.schema = Object.keys(schema).map(
+      (e) => new ParserElement({ name: "--" + e, ...schema[e] })
     );
-    this.path = props.path ?? false;
-    this.help = props.help;
+    this.path = path ?? false;
+    this.help = help;
+    this.value = this.parse();
   }
 
   /**
    * Parses the command-line arguments based on the schema.
-   * @returns An object containing the parsed path and values.
+   * @returns A string with help information or An object containing the parsed path and values.
    * @throws {ParserError} If an argument is not found in the schema.
+   * @private
    */
-  parse() {
-    if (this.help) this.helper();
+  private parse() {
+    if (
+      this.help &&
+      (this.args.includes(this.help.name) ||
+        this.args.includes(this.help.short))
+    )
+      return this.helper();
+
     const result = Object();
     for (const argValue of this.args) {
       const [arg, value] = argValue.split(this.separator);
@@ -73,7 +79,7 @@ export default class Parser<T extends BaseSchema> {
     this.schema.every((e) => e.checkExists(result));
     return {
       path: this.place,
-      values: result as Args<T>,
+      values: result as ParsedValue<T>,
     };
   }
 
@@ -85,42 +91,31 @@ export default class Parser<T extends BaseSchema> {
     const help = this.help!;
     const args = this.args
       .flatMap((e) => e.split(this.separator))
-      .filter((e) =>
-        this.schema.find(
-          (s) => s.name === e || e === help.name || e === help.short
-        )
-      );
+      .filter((e) => e.includes("--"));
     let helpIndex = args.indexOf(help.name);
-    if (helpIndex < 0 && !help.short) {
-      return;
-    }
     if (helpIndex < 0 && help.short) {
       helpIndex = args.indexOf(help.short);
-      if (helpIndex < 0) return;
     }
+
     if (helpIndex > 0) {
-      const map = args
-        .slice(0, helpIndex)
-        .map((e) => this.schema.find((s) => s.name === e))
-        .filter((e) => !!e);
-      if (!map.length) {
-        ParserError.argNotFound();
+      const argument = args.slice(0, helpIndex);
+      const map = [];
+      for (const arg of argument) {
+        const el = this.schema.find((e) => e.name === arg);
+        if (!el) throw ParserError.argNotFound(arg);
+        map.push(el);
       }
-      Bun.write(Bun.stdout, map.map((e) => this.message(e!)).join("\n"));
+      return map.map((e) => this.message(e!)).join("\n");
     } else {
       const map = this.schema.map((e) => this.message(e));
-      Bun.write(
-        Bun.stdout,
-        `Program : ${this.name}\nDescription : ${
-          this.description
-        }\nSeparator : ${this.separator}\n\nHelp args : ${help.name}${
-          help.short ? " & " + help.short : ""
-        }\n\nbunx ${this.name} ${
-          this.path ? "[PATH] " : ""
-        }[OPTION]\n\nOption :\n${map.join("\n")}`
-      );
+      return `${this.name ? `Program : ${this.name}\n` : ""}${
+        this.description ? `Description : ${this.description}\n` : ""
+      }Separator : ${this.separator}\n\nHelp args : ${help.name}${
+        help.short ? " & " + help.short : ""
+      }\n\nbunx ${this.name ? this.name : ""} ${
+        this.path ? "[PATH] " : ""
+      }[OPTION]\n\nOption :\n${map.join("\n")}`;
     }
-    process.exit(0);
   }
 
   /**
@@ -130,14 +125,36 @@ export default class Parser<T extends BaseSchema> {
    * @private
    */
   private message(e: ParserElement) {
-    return `|Name : ${e.name}\n|Short : ${e.short}\n|Description : ${
+    return `|Name : ${e.name}\n${e.short ? `|Short : ${e.short}\n` : ""}${
       e.description
-    }\n|Type : ${e.type}\n|Required : ${
-      e.required ? "Yes" : "No"
-    }\n|Example : ${e.name}${
+        ? `|Description : 
+      ${e.description}\n`
+        : ""
+    }|Type : ${e.type}\n|Required : ${e.required ? "Yes" : "No"}\n|Example : ${
+      e.name
+    }${
       e.type !== "boolean"
         ? `${this.separator}${e.type === "number" ? 3 : '"exemple"'}`
         : ""
     }\n`;
+  }
+
+  /**
+   * Return the value of the command-line arguments based on the schema.
+   * Write in stdout the help information if the help flag was triggered
+   * @returns A string with help information or An object containing the parsed path and values.
+   */
+  getValue() {
+    if (typeof this.value === "string") Bun.write(Bun.stdout, this.value);
+    return this.value;
+  }
+
+  /**
+   * Shorthand function to creates an instance of Parser and return the value.
+   * @param props - The properties for initializing the parser.
+   * @returns A string with help information or An object containing the parsed path and values.
+   */
+  static generate<T extends BaseSchema>(props: ParserConstructor<T>) {
+    return new Parser(props).getValue();
   }
 }

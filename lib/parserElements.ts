@@ -53,8 +53,7 @@ export default class ParserElement {
    */
   public checkExists(values: Record<string, any>) {
     if (!this.required) return true;
-    if (!values[this.name.slice(2)])
-      ParserError.missingValue(this.type, this.name);
+    if (!values[this.name.slice(2)]) throw ParserError.missingValue(this.name);
     return true;
   }
 
@@ -68,7 +67,7 @@ export default class ParserElement {
   private checkNumber(value: unknown) {
     const transformed = Number(value);
     if (isNaN(transformed)) {
-      ParserError.wrongType(this.type, typeof value, this.name);
+      throw ParserError.wrongType(this.type, typeof value, this.name);
     }
     return transformed;
   }
@@ -82,8 +81,11 @@ export default class ParserElement {
    */
   private checkString(value: unknown) {
     if (typeof value !== "string") {
-      ParserError.wrongType(this.type, typeof value, this.name);
+      throw ParserError.wrongType(this.type, typeof value, this.name);
     }
-    return value as string;
+    if (value.length < 1) {
+      throw ParserError.missingValue(this.name);
+    }
+    return value.replaceAll('"', "").replaceAll("'", "") as string;
   }
 }
