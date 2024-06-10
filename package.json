@@ -21,6 +21,5 @@
   },
   "publishConfig": {
     "@LeoDurillon:registry": "https://npm.pkg.github.com"
-  },
-  "private": "true"
+  }
 }
