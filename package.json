@@ -1,6 +1,10 @@
 {
-  "name": "bun-parser",
+  "name": "@LeoDurillon/BunParser",
   "version": "0.0.1",
+  "scripts": {
+    "build": "bun build index.ts",
+    "test": "bun test"
+  },
   "author": {
     "name": "Léo Durillon"
   },
@@ -11,5 +15,9 @@
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
-  }
+  },
+  "publishConfig": {
+    "@LeoDurillon:registry": "https://npm.pkg.github.com"
+  },
+  "private": "true"
 }

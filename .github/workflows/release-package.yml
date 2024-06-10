@@ -1,0 +1,38 @@
+name: BunParser
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    name: build-app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Install bun
+        uses: oven-sh/setup-bun@v1
+      - name: Install dependencies
+        run: bun install
+      - name: Test everything working
+        run: bun run test
+      - name: Build app
+        run: bun run build
+
+  publish-gpr:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+        with:
+          registry-url: "https://npm.pkg.github.com/"
+          scope: "@LeoDurillon"
+      - run: bun ci
+      - run: bun publish
+        env:
+          BUN_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
