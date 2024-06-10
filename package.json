@@ -16,6 +16,9 @@
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
+  "repository": {
+    "url": "https://github.com/LeoDurillon/BunParser.git"
+  },
   "publishConfig": {
     "@LeoDurillon:registry": "https://npm.pkg.github.com"
   },
