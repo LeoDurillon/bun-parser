@@ -32,7 +32,7 @@ jobs:
         with:
           registry-url: "https://npm.pkg.github.com/"
           scope: "@LeoDurillon"
-      - run: bun ci
-      - run: bun publish
+      - run: npm ci
+      - run: npm publish
         env:
           BUN_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
