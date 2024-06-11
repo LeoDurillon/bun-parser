@@ -2,7 +2,7 @@
   "name": "@leodurillon/bun-parser",
   "version": "0.0.3",
   "scripts": {
-    "build": "bun build ./build.config.ts",
+    "build": "bun ./build.config.ts",
     "test": "bun test"
   },
   "author": {
