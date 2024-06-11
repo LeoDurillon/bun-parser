@@ -1,3 +1,5 @@
+import type { BaseSchema, ParserConstructor } from "../dist";
+
 export default {
   help: {
     name: "test",
