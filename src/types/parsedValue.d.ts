@@ -1,3 +1,5 @@
+import type { SchemaType } from "./schemaType";
+
 export type ParsedValue<T extends BaseSchema> = {
   [P in keyof T]: T[P] extends { required: true }
     ? SchemaType[T[P]["type"]]
