@@ -1,4 +1,4 @@
-type BaseSchema = Record<
+export type BaseSchema = Record<
   string,
   {
     type: "string" | "number" | "boolean";

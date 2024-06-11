@@ -1,7 +1,7 @@
 import { test, expect, jest, beforeEach, describe } from "bun:test";
-import Parser from "../lib/parser";
+import Parser from "../src/lib/parser";
 import data from "./data";
-import ParserError from "../lib/parserError";
+import ParserError from "../src/lib/parserError";
 
 function argCleaner() {
   const length = Bun.argv.length - 2;

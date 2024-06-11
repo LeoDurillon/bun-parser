@@ -1,4 +1,4 @@
-interface ParserConstructor<T extends BaseSchema> {
+export interface ParserConstructor<T extends BaseSchema> {
   name?: string;
   description?: string;
   schema: T;
