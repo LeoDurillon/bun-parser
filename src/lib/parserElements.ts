@@ -113,7 +113,7 @@ export default class ParserElement {
   private checkPath(value: string) {
     const match = new RegExp(/(^(.?)(\/))+.*\/?/).exec(value);
     if (!match) throw ParserError.wrongType(this.type, value, this.name);
-    return process.cwd() + value.replace(/^(.?)(\/)/, "$1");
+    return `${process.cwd()}/${value.replace(/^(.?)(\/)/, "$1")}`;
   }
 
   /**

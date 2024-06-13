@@ -138,7 +138,7 @@ describe("Parser", () => {
       expect(parser.values.new).toBe(true);
       expect(parser.values.regex).toBeInstanceOf(RegExp);
       expect(parser.values.testPath).toBeString();
-      expect(parser.values.testPath).toBe(process.cwd() + "test/test");
+      expect(parser.values.testPath).toBe(process.cwd() + "/test/test");
     });
 
     test("Should ignore non required value when not defined", () => {
