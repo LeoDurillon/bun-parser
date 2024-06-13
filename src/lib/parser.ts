@@ -144,7 +144,9 @@ export default class Parser<T extends BaseSchema> {
       e.name
     }${
       e.type !== "boolean"
-        ? `${this.separator}${e.type === "number" ? 3 : '"exemple"'}`
+        ? `${this.separator}${
+            e.example ? e.example : e.type === "number" ? 3 : '"exemple"'
+          }`
         : ""
     }\n`;
   }

@@ -6,7 +6,7 @@ export default class ParserElement {
   public short?: string;
   public description?: string;
   public required?: boolean;
-
+  public example?: string;
   /**
    * Creates an instance of ParserElement.
    * @param schema - The schema defining the parser element.
@@ -15,6 +15,7 @@ export default class ParserElement {
    * @param schema.short - An optional short name for the parser element.
    * @param schema.description - An optional description of the parser element.
    * @param schema.required - Indicates if the parser element is required.
+   * @param schema.example - Example of value
    */
   constructor(schema: {
     name: string;
@@ -22,12 +23,14 @@ export default class ParserElement {
     short?: string;
     description?: string;
     required?: boolean;
+    example?: string;
   }) {
     this.name = schema.name;
     this.type = schema.type;
     this.short = schema.short;
     this.description = schema.description;
     this.required = schema.required;
+    this.example = schema.example;
   }
 
   /**
@@ -43,7 +46,6 @@ export default class ParserElement {
         : this.checkString(value);
 
     if (this.type === "path") {
-      console.log(transformed);
       transformed = this.checkPath(transformed as string);
     }
 

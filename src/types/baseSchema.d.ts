@@ -5,5 +5,6 @@ export type BaseSchema = Record<
     short?: string;
     description?: string;
     required?: boolean;
+    example?: string;
   }
 >;
