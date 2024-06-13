@@ -107,7 +107,16 @@ describe("Parser", () => {
       expect(parser.path.selected).toBe(process.cwd() + "/test/path");
     });
     test("Should return value of argument with good type", () => {
-      Bun.argv.push(...["test/path", '--flag="test"', "--test=2", "--new"]);
+      Bun.argv.push(
+        ...[
+          "test/path",
+          '--flag="test"',
+          "--test=2",
+          "--new",
+          "--regex=^.(.*)?.$",
+          "--testPath=/test/test",
+        ]
+      );
       Bun.write = jest.fn();
 
       const parser = Parser.generate(data.parser) as {
@@ -116,6 +125,8 @@ describe("Parser", () => {
           flag: string;
           test: number;
           new: boolean;
+          regex: RegExp;
+          testPath: string;
         };
       };
       expect(parser).toBeObject();
@@ -125,6 +136,9 @@ describe("Parser", () => {
       expect(parser.values.test).toBe(2);
       expect(parser.values.new).toBeBoolean();
       expect(parser.values.new).toBe(true);
+      expect(parser.values.regex).toBeInstanceOf(RegExp);
+      expect(parser.values.testPath).toBeString();
+      expect(parser.values.testPath).toBe(process.cwd() + "test/test");
     });
 
     test("Should ignore non required value when not defined", () => {
@@ -144,6 +158,26 @@ describe("Parser", () => {
       expect(parser.values.flag).toBe("test");
       expect(parser.values.test).toBeUndefined();
       expect(parser.values.new).toBeUndefined();
+    });
+
+    test("Should only remove first and last occurence of ' or \" ", () => {
+      Bun.argv.push(
+        ...["test/path", '--flag="test."test""', "--string2='/test/'test''"]
+      );
+      Bun.write = jest.fn();
+
+      const parser = Parser.generate(data.parser) as {
+        path: any;
+        values: {
+          flag: string;
+          string2: string;
+        };
+      };
+      expect(parser).toBeObject();
+      expect(parser.values.flag).toBeString();
+      expect(parser.values.flag).toBe('test."test"');
+      expect(parser.values.string2).toBeString();
+      expect(parser.values.string2).toBe("/test/'test'");
     });
 
     test("Should throw if missing required value", () => {

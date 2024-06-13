@@ -1,4 +1,5 @@
-import type { BaseSchema, ParserConstructor } from "../dist";
+import type { ParserConstructor } from "../src/types/parserConstructor";
+import type { BaseSchema } from "../src/types/baseSchema";
 
 export default {
   help: {
@@ -35,6 +36,15 @@ export default {
       },
       new: {
         type: "boolean",
+      },
+      regex: {
+        type: "regexp",
+      },
+      testPath: {
+        type: "path",
+      },
+      string2: {
+        type: "string",
       },
     },
   },

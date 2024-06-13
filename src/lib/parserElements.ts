@@ -2,7 +2,7 @@ import ParserError from "./parserError";
 
 export default class ParserElement {
   public name: string;
-  public type: "string" | "number" | "boolean";
+  public type: "string" | "number" | "boolean" | "path" | "regexp";
   public short?: string;
   public description?: string;
   public required?: boolean;
@@ -18,7 +18,7 @@ export default class ParserElement {
    */
   constructor(schema: {
     name: string;
-    type: "string" | "number" | "boolean";
+    type: "string" | "number" | "boolean" | "path" | "regexp";
     short?: string;
     description?: string;
     required?: boolean;
@@ -37,10 +37,19 @@ export default class ParserElement {
    * @throws {ParserError} If the value does not match the expected type.
    */
   public checkType(value: unknown) {
-    const transformed =
+    let transformed: string | number | RegExp =
       this.type === "number"
         ? this.checkNumber(value)
         : this.checkString(value);
+
+    if (this.type === "path") {
+      console.log(transformed);
+      transformed = this.checkPath(transformed as string);
+    }
+
+    if (this.type === "regexp") {
+      transformed = this.checkRegEXP(transformed as string);
+    }
 
     return transformed;
   }
@@ -86,6 +95,33 @@ export default class ParserElement {
     if (value.length < 1) {
       throw ParserError.missingValue(this.name);
     }
-    return value.replaceAll('"', "").replaceAll("'", "") as string;
+
+    if (value[0] === value[value.length - 1] && ['"', "'"].includes(value[0]))
+      return value.slice(1, -1);
+    return value as string;
+  }
+
+  /**
+   * Checks if the provided value is a valid path.
+   * @param value - The value to check.
+   * @returns The path if it is valid.
+   * @throws {ParserError} If the value is not a valid string.
+   * @private
+   */
+  private checkPath(value: string) {
+    const match = new RegExp(/(^(.?)(\/))+.*\/?/).exec(value);
+    if (!match) throw ParserError.wrongType(this.type, value, this.name);
+    return process.cwd() + value.replace(/^(.?)(\/)/, "$1");
+  }
+
+  /**
+   * Transform the value as regexp
+   * @param value - The value to check.
+   * @returns The RegExp.
+   * @private
+   */
+  private checkRegEXP(value: string) {
+    const regexp = new RegExp(value);
+    return regexp;
   }
 }
