@@ -75,12 +75,13 @@ describe("Parser", () => {
       Bun.write = jest.fn();
 
       const parser = Parser.generate(data.help) as {
-        path: string;
+        path: { working: string; selected: string };
         values: any;
       };
       expect(parser).toBeObject();
       expect(parser.path).toBeDefined();
-      expect(parser.path).toBe(process.cwd());
+      expect(parser.path.selected).toBe(process.cwd());
+      expect(parser.path.working).toBe(process.cwd());
     });
 
     test("Should return path with extension if path is true", () => {
@@ -88,13 +89,23 @@ describe("Parser", () => {
       Bun.write = jest.fn();
 
       const parser = Parser.generate(data.parser) as {
-        path: string;
+        path: { working: string; selected: string };
         values: any;
       };
-
-      expect(parser.path).toBe(process.cwd() + "/test/path");
+      expect(parser.path.working).toBe(process.cwd());
+      expect(parser.path.selected).toBe(process.cwd() + "/test/path");
     });
+    test("Should remove . and / from path if path is true", () => {
+      Bun.argv.push(...["./test/path", '--flag="test"']);
+      Bun.write = jest.fn();
 
+      const parser = Parser.generate(data.parser) as {
+        path: { working: string; selected: string };
+        values: any;
+      };
+      expect(parser.path.working).toBe(process.cwd());
+      expect(parser.path.selected).toBe(process.cwd() + "/test/path");
+    });
     test("Should return value of argument with good type", () => {
       Bun.argv.push(...["test/path", '--flag="test"', "--test=2", "--new"]);
       Bun.write = jest.fn();

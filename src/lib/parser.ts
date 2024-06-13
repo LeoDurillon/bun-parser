@@ -12,12 +12,14 @@ export default class Parser<T extends BaseSchema> {
   private name?: string;
   private description?: string;
   private args: string[];
-  public place: string;
+  public place: { working: string; selected: string };
   private separator: string;
   private schema: ParserElement[];
   private help?: { name: string; short: string };
   private path: boolean;
-  public value: string | { path: string; values: ParsedValue<T> };
+  public value:
+    | string
+    | { path: { working: string; selected: string }; values: ParsedValue<T> };
   /**
    * Creates an instance of Parser.
    * @param props - The properties for initializing the parser.
@@ -41,7 +43,12 @@ export default class Parser<T extends BaseSchema> {
     this.args = Bun.argv.slice(
       path && ![help?.name, help?.short].includes(Bun.argv[2]) ? 3 : 2
     );
-    this.place = `${process.cwd()}${path ? "/" + Bun.argv[2] : ""}`;
+    this.place = {
+      working: process.cwd(),
+      selected: `${process.cwd()}${
+        path ? "/" + Bun.argv[2].replace(/^(.?)(\/)/, "") : ""
+      }`,
+    };
     this.separator = separator ?? "=";
     this.schema = Object.keys(schema).map(
       (e) => new ParserElement({ name: "--" + e, ...schema[e] })
