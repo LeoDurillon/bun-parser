@@ -79,7 +79,7 @@ if (typeof myParser === "string") {
 | help        | Object-(Optional)           | { name: "--help",short: "-h",} | Argument that should be used to display help                                                                            |
 | path        | Boolean-(Optional)          | true                           | If true a path should be given when the program is called                                                               |
 | separator   | String-(Default "=")        | =                              | To define a custom separator between argument and value                                                                 |
-| schema      | Object of Object-(Optional) | {arg1:{type:"string"}}         | The schema containing all the argument that the program could use the key of the object define the name of the argument |
+| schema      | Object-(Optional) | {arg1:{type:"string"}}         | The schema containing all the argument that the program could use the key of the object define the name of the argument |
 
 #### Help
 
