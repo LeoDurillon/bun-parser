@@ -29,6 +29,9 @@ export default class ParserError {
     return Error(`${argName ? argName + " i" : "I"}s required\n`);
   }
 
+  /**
+   * Handles the case when no path wath found in arguments.
+   */
   static missingPath() {
     return Error("An argument for path was expected but found nothing");
   }

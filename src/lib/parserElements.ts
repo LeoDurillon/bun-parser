@@ -7,6 +7,7 @@ export default class ParserElement {
   public description?: string;
   public required?: boolean;
   public example?: string;
+
   /**
    * Creates an instance of ParserElement.
    * @param schema - The schema defining the parser element.

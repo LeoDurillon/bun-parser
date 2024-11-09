@@ -14,12 +14,13 @@ export default class Parser<T extends BaseSchema> {
   private args: string[];
   public place: { working: string; selected: string };
   private separator: string;
-  private schema: ParserElement[];
+  private schema?: ParserElement[];
   private help?: { name: string; short: string };
   private path: boolean;
   public value:
     | string
-    | { path: { working: string; selected: string }; values: ParsedValue<T> };
+    | { path: { working: string; selected: string }; values?: ParsedValue<T> };
+
   /**
    * Creates an instance of Parser.
    * @param props - The properties for initializing the parser.
@@ -50,9 +51,11 @@ export default class Parser<T extends BaseSchema> {
       }`,
     };
     this.separator = separator ?? "=";
-    this.schema = Object.keys(schema).map(
-      (e) => new ParserElement({ name: "--" + e, ...schema[e] })
-    );
+    this.schema = schema
+      ? Object.keys(schema).map(
+          (e) => new ParserElement({ name: "--" + e, ...schema[e] })
+        )
+      : undefined;
     this.path = path ?? false;
     this.help = help;
     this.value = this.parse();
@@ -71,14 +74,18 @@ export default class Parser<T extends BaseSchema> {
         this.args.includes(this.help.short))
     )
       return this.helper();
+    if (!this.schema) return { path: this.place };
 
     const result = Object();
+    //Loop on provided argument
     for (const argValue of this.args) {
       const [arg, value] = argValue.split(this.separator);
-      const element = this.schema.find((e) => e.name === arg);
+      //Check that required argument are provided
+      const element = this.schema.find((element) => element.name === arg);
       if (!element) {
         throw ParserError.argNotFound(arg);
       }
+      //Check that argument have the good type
       if (element.type !== "boolean") {
         const res = element.checkType(value);
         result[element.name.slice(2)] = res;
@@ -86,7 +93,7 @@ export default class Parser<T extends BaseSchema> {
         result[element.name.slice(2)] = true;
       }
     }
-    this.schema.every((e) => e.checkExists(result));
+    this.schema.every((element) => element.checkExists(result));
     return {
       path: this.place,
       values: result as ParsedValue<T>,
@@ -106,18 +113,30 @@ export default class Parser<T extends BaseSchema> {
     if (helpIndex < 0 && help.short) {
       helpIndex = args.indexOf(help.short);
     }
+    //If no schema return basic help
+    if (!this.schema)
+      return `${this.name ? `Program : ${this.name}\n` : ""}${
+        this.description ? `Description : ${this.description}\n` : ""
+      }Separator : ${this.separator}\n\nHelp args : ${help.name}${
+        help.short ? " & " + help.short : ""
+      }\n\nbunx ${this.name ? this.name : ""} ${this.path ? "[PATH] " : ""}`;
 
+    //Return help based on provided argument if help isn't the first argument
     if (helpIndex > 0) {
       const argument = args.slice(0, helpIndex);
       const map = [];
+      //Check if avery arguments exists
       for (const arg of argument) {
         const el = this.schema.find((e) => e.name === arg);
         if (!el) throw ParserError.argNotFound(arg);
         map.push(el);
       }
+      //Generate messages for every expected argument
       return map.map((e) => this.message(e!)).join("\n");
     } else {
-      const map = this.schema.map((e) => this.message(e));
+      //Generate messages for every expected argument
+      const map = this.schema.map((element) => this.message(element));
+      //Return help and type of every argument
       return `${this.name ? `Program : ${this.name}\n` : ""}${
         this.description ? `Description : ${this.description}\n` : ""
       }Separator : ${this.separator}\n\nHelp args : ${help.name}${
@@ -130,22 +149,28 @@ export default class Parser<T extends BaseSchema> {
 
   /**
    * Formats a message for a given parser element.
-   * @param e - The parser element to format.
+   * @param element - The parser element to format.
    * @returns A formatted string with the element's details.
    * @private
    */
-  private message(e: ParserElement) {
-    return `|Name : ${e.name}\n${e.short ? `|Short : ${e.short}\n` : ""}${
-      e.description
-        ? `|Description : 
-      ${e.description}\n`
-        : ""
-    }|Type : ${e.type}\n|Required : ${e.required ? "Yes" : "No"}\n|Example : ${
-      e.name
+  private message(element: ParserElement) {
+    return `|Name : ${element.name}\n${
+      element.short ? `|Short : ${element.short}\n` : ""
     }${
-      e.type !== "boolean"
+      element.description
+        ? `|Description : 
+      ${element.description}\n`
+        : ""
+    }|Type : ${element.type}\n|Required : ${
+      element.required ? "Yes" : "No"
+    }\n|Example : ${element.name}${
+      element.type !== "boolean"
         ? `${this.separator}${
-            e.example ? e.example : e.type === "number" ? 3 : '"exemple"'
+            element.example
+              ? element.example
+              : element.type === "number"
+              ? 3
+              : '"exemple"'
           }`
         : ""
     }\n`;
